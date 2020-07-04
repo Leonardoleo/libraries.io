@@ -24,6 +24,7 @@ class ProjectSerializer < ActiveModel::Serializer
     repository_url
     stars
     status
+    updated_at
   ]
 
   has_many :versions

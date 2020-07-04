@@ -1,5 +1,5 @@
 class Api::ProjectsController < Api::ApplicationController
-  before_action :find_project, except: [:searchcode, :dependencies, :dependencies_bulk]
+  before_action :find_project, except: [:searchcode, :dependencies, :dependencies_bulk, :updated]
 
   def show
     render json: @project
@@ -20,6 +20,37 @@ class Api::ProjectsController < Api::ApplicationController
 
   def searchcode
     render json: Project.visible.where('updated_at > ?', 1.day.ago).order(:repository_url).pluck(:repository_url).compact.reject(&:blank?)
+  end
+
+  # returns any updated projects in a time window, the caller can
+  # then decide which ones it needs to refetch.
+  def updated
+    start = date_parameter(:start_time)
+    stop = date_parameter(:end_time)
+
+    raise ActionController::BadRequest.new("must specify start_time") if start.nil?
+    stop = DateTime.current if stop.nil?
+
+    # we have an arbitrary limit on this to prevent pathology, since there's no pagination.
+    arbitrary_maximum = 1000
+
+    count = Project.visible.updated_within(start, stop).count
+
+    # seems better to be loud than to just truncate?
+    raise ActionController::BadRequest.new("query matches too many records") if count > arbitrary_maximum
+
+    # but since there's a race here, we do truncate the query if we have to
+    results = Project.visible.updated_within(start, stop).limit(arbitrary_maximum).pluck(:platform, :name, :updated_at)
+
+    results_as_hashes = results.map do |platform, name, updated_at|
+      {
+        platform: platform,
+        name: name,
+        updated_at: updated_at
+      }
+    end
+
+    render json: results_as_hashes
   end
 
   def dependencies
@@ -82,6 +113,19 @@ class Api::ProjectsController < Api::ApplicationController
     project_json[:dependencies] = map_dependencies(version.dependencies.includes(:project) || [])
 
     project_json
+  end
+
+  def date_parameter(symbol)
+    s = params.fetch(symbol, nil)
+    if s.nil?
+      nil
+    else
+      begin
+        DateTime.iso8601(s)
+      rescue ArgumentError
+        raise ActionController::BadRequest.new("bad date parameter")
+      end
+    end
   end
 
 end

@@ -30,6 +30,7 @@ describe ProjectSerializer do
         repository_url
         stars
         status
+        updated_at
       ]
     )
   end

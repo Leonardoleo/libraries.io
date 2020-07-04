@@ -30,6 +30,7 @@ class Project < ApplicationRecord
     rank
     repository_url
     status
+    updated_at
   ]
 
   validates_presence_of :name, :platform
@@ -54,6 +55,7 @@ class Project < ApplicationRecord
   has_one :readme, through: :repository
   has_many :repository_maintenance_stats, through: :repository
 
+  scope :updated_within, ->(start, stop) { where('updated_at >= ? and updated_at <= ? ', start, stop).order(updated_at: :asc) }
   scope :least_recently_updated_stats, -> { joins(:repository_maintenance_stats).group('projects.id').where.not(repository: nil).order(Arel.sql('max(repository_maintenance_stats.updated_at) ASC')) }
   scope :no_existing_stats, -> { includes(:repository_maintenance_stats).where(repository_maintenance_stats: {id: nil}).where.not(repository: nil) }
 
