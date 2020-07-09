@@ -44,6 +44,7 @@ class Api::ProjectsController < Api::ApplicationController
 
     # but since there's a race here, we do truncate the query if we have to
     results = Project.visible.updated_within(start, stop).limit(arbitrary_maximum).pluck(:platform, :name, :updated_at)
+    deleted_results = DeletedProject.updated_within(start, stop).limit(arbitrary_maximum).pluck(:platform, :name, :updated_at)
 
     results_as_hashes = results.map do |platform, name, updated_at|
       {
@@ -51,6 +52,15 @@ class Api::ProjectsController < Api::ApplicationController
         name: name,
         updated_at: updated_at
       }
+    end
+
+    deleted_results.each do |platform, name, updated_at|
+      results_as_hashes.push({
+                               platform: platform,
+                               name: name,
+                               updated_at: updated_at,
+                               deleted: true
+                             })
     end
 
     render json: results_as_hashes

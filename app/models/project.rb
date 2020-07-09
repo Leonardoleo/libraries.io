@@ -124,6 +124,8 @@ class Project < ApplicationRecord
   after_commit :update_source_rank_async, on: [:create, :update]
   before_save  :update_details
   before_destroy :destroy_versions
+  before_destroy :create_deleted_project
+  after_create :destroy_deleted_project
 
   def self.total
     Rails.cache.fetch 'projects:total', :expires_in => 1.day, race_condition_ttl: 2.minutes do
@@ -253,6 +255,15 @@ class Project < ApplicationRecord
 
   def destroy_versions
     versions.find_each(&:destroy)
+  end
+
+  def create_deleted_project
+    DeletedProject.create(platform: platform, name: name)
+  end
+
+  def destroy_deleted_project
+    # this happens when bringing a project back to life
+    DeletedProject.where(platform: platform, name: name).destroy_all
   end
 
   def stars

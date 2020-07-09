@@ -116,6 +116,28 @@ describe "Api::ProjectsController" do
       expect { get "/api/projects/updated?start_time=#{1.year.ago.utc.iso8601}&end_time=NOTADATE&api_key=#{internal_user.api_key}" }
         .to raise_exception(ActionController::BadRequest)
     end
+
+    it "notices deletions" do
+      deleted_platform = project.platform
+      deleted_name = project.name
+      project.destroy!
+      get "/api/projects/updated?start_time=#{1.year.ago.utc.iso8601}&api_key=#{internal_user.api_key}"
+      expect(response).to have_http_status(:success)
+      expect(response.content_type).to eq("application/json")
+      expect(response.body).to be_json_eql [
+                                 {
+                                   platform: dependent_project.platform,
+                                   name: dependent_project.name,
+                                   updated_at: dependent_project.updated_at.utc.iso8601(3)
+                                 },
+                                 {
+                                   platform: deleted_platform,
+                                   name: deleted_name,
+                                   updated_at: DeletedProject.first.updated_at.utc.iso8601(3),
+                                   deleted: true
+                                 }
+                               ].to_json
+    end
   end
 
   describe "GET /api/:platform/:name/dependencies", type: :request do
