@@ -30,7 +30,6 @@ class Project < ApplicationRecord
     rank
     repository_url
     status
-    updated_at
   ]
 
   validates_presence_of :name, :platform

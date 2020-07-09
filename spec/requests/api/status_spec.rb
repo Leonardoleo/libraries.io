@@ -25,6 +25,10 @@ describe "API::StatusController" do
       expect(maintenance_stats.length).to be 1
       expect(maintenance_stats.first["category"]).to eql maintenance_stat.category
       expect(maintenance_stats.first["value"]).to eql maintenance_stat.value
+
+      # and updated_at
+      updated_at = json_response.first["updated_at"]
+      expect(updated_at).not_to be(nil)
     end
 
     it "renders empty json list if cannot find Project" do

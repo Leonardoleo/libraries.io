@@ -36,7 +36,6 @@ describe "Api::BowerSearchController", elasticsearch: true do
             repository_url: project.repository_url,
             stars: project.stars,
             status: project.status,
-            updated_at: project.updated_at.utc.iso8601(3),
             versions: project.versions
           }
         ].as_json

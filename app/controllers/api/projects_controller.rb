@@ -2,7 +2,7 @@ class Api::ProjectsController < Api::ApplicationController
   before_action :find_project, except: [:searchcode, :dependencies, :dependencies_bulk, :updated]
 
   def show
-    render json: @project
+    render(json: @project, show_updated_at: internal_api_key?)
   end
 
   def sourcerank
@@ -25,6 +25,9 @@ class Api::ProjectsController < Api::ApplicationController
   # returns any updated projects in a time window, the caller can
   # then decide which ones it needs to refetch.
   def updated
+    # there's no ActionController::Forbidden
+    raise ActionController::BadRequest unless internal_api_key?
+
     start = date_parameter(:start_time)
     stop = date_parameter(:end_time)
 

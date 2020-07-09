@@ -24,8 +24,13 @@ class ProjectSerializer < ActiveModel::Serializer
     repository_url
     stars
     status
-    updated_at
   ]
 
   has_many :versions
+
+  attribute :updated_at, if: :show_updated_at?
+
+  def show_updated_at?
+    instance_options[:show_updated_at]
+  end
 end
