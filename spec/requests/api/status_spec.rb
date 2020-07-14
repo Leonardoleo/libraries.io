@@ -146,7 +146,7 @@ describe "API::StatusController" do
 
     context "with normal API key" do
 
-      it "returns no maintenance stats" do
+      it "returns no maintenance stats or updated_at" do
         post "/api/check", params: {api_key: normal_user.api_key, projects: [{name: project_django.name, platform: project_django.platform}] }
         expect(response).to have_http_status(:success)
         expect(response.content_type).to eq('application/json')
@@ -154,6 +154,7 @@ describe "API::StatusController" do
 
         json_response = JSON.parse(response.body)
         expect(json_response.first.key? "repository_maintenance_stats").to be false
+        expect(json_response.first.key? "updated_at").to be false
       end
     end
 
