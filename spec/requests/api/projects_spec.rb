@@ -69,32 +69,41 @@ describe "Api::ProjectsController" do
       get "/api/projects/updated?start_time=#{1.year.ago.utc.iso8601}&api_key=#{internal_user.api_key}"
       expect(response).to have_http_status(:success)
       expect(response.content_type).to eq("application/json")
-      expect(response.body).to be_json_eql [
-                                 {
-                                   platform: project.platform,
-                                   name: project.name,
-                                   updated_at: project.updated_at.utc.iso8601(3)
-                                 },
-                                 {
-                                   platform: dependent_project.platform,
-                                   name: dependent_project.name,
-                                   updated_at: dependent_project.updated_at.utc.iso8601(3)
-                                 }
-                               ].to_json
+      expect(response.body).to be_json_eql ({
+        updated: [
+          {
+            platform: project.platform,
+            name: project.name,
+            updated_at: project.updated_at.utc.iso8601(3)
+          },
+          {
+            platform: dependent_project.platform,
+            name: dependent_project.name,
+            updated_at: dependent_project.updated_at.utc.iso8601(3)
+          }
+        ],
+        deleted: []
+      }).to_json
     end
 
     it "ignores stuff after end_time" do
       get "/api/projects/updated?start_time=#{1.year.ago.utc.iso8601}&end_time=#{1.month.ago.utc.iso8601}&api_key=#{internal_user.api_key}"
       expect(response).to have_http_status(:success)
       expect(response.content_type).to eq("application/json")
-      expect(response.body).to be_json_eql [].to_json
+      expect(response.body).to be_json_eql ({
+        updated: [],
+        deleted: []
+      }).to_json
     end
 
     it "ignores stuff before start_time" do
       get "/api/projects/updated?start_time=#{(project.updated_at + 1).utc.iso8601}&api_key=#{internal_user.api_key}"
       expect(response).to have_http_status(:success)
       expect(response.content_type).to eq("application/json")
-      expect(response.body).to be_json_eql [].to_json
+      expect(response.body).to be_json_eql ({
+        updated: [],
+        deleted: []
+      }).to_json
     end
 
     it "errors if no start_time" do
@@ -123,18 +132,21 @@ describe "Api::ProjectsController" do
       get "/api/projects/updated?start_time=#{1.year.ago.utc.iso8601}&api_key=#{internal_user.api_key}"
       expect(response).to have_http_status(:success)
       expect(response.content_type).to eq("application/json")
-      expect(response.body).to be_json_eql [
-                                 {
-                                   platform: dependent_project.platform,
-                                   name: dependent_project.name,
-                                   updated_at: dependent_project.updated_at.utc.iso8601(3)
-                                 },
-                                 {
-                                   digest: deleted_digest,
-                                   updated_at: DeletedProject.first.updated_at.utc.iso8601(3),
-                                   deleted: true
-                                 }
-                               ].to_json
+      expect(response.body).to be_json_eql ({
+        updated: [
+          {
+            platform: dependent_project.platform,
+            name: dependent_project.name,
+            updated_at: dependent_project.updated_at.utc.iso8601(3)
+          }
+        ],
+        deleted: [
+          {
+            digest: deleted_digest,
+            updated_at: DeletedProject.first.updated_at.utc.iso8601(3)
+          }
+        ]
+      }).to_json
     end
   end
 

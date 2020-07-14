@@ -44,7 +44,9 @@ class Api::ProjectsController < Api::ApplicationController
     # seems better to be loud than to just truncate?
     raise ActionController::BadRequest.new("query matches too many records") if results.length > arbitrary_maximum || deleted_results.length > arbitrary_maximum
 
-    results_as_hashes = results.map do |platform, name, updated_at|
+    reply = {}
+
+    reply[:updated] = results.map do |platform, name, updated_at|
       {
         platform: platform,
         name: name,
@@ -52,15 +54,14 @@ class Api::ProjectsController < Api::ApplicationController
       }
     end
 
-    deleted_results.each do |digest, updated_at|
-      results_as_hashes.push({
-                               digest: digest,
-                               updated_at: updated_at,
-                               deleted: true
-                             })
+    reply[:deleted] = deleted_results.map do |digest, updated_at|
+      {
+        digest: digest,
+        updated_at: updated_at
+      }
     end
 
-    render json: results_as_hashes
+    render json: reply
   end
 
   def dependencies
