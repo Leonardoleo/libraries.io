@@ -35,16 +35,14 @@ class Api::ProjectsController < Api::ApplicationController
     stop = DateTime.current if stop.nil?
 
     # we have an arbitrary limit on this to prevent pathology, since there's no pagination.
-    arbitrary_maximum = 1000
+    # can be pretty high since we're returning only a few fields per row.
+    arbitrary_maximum = 5000
 
-    count = Project.visible.updated_within(start, stop).count
+    results = Project.visible.updated_within(start, stop).limit(arbitrary_maximum + 1).pluck(:platform, :name, :updated_at)
+    deleted_results = DeletedProject.updated_within(start, stop).limit(arbitrary_maximum + 1).pluck(:digest, :updated_at)
 
     # seems better to be loud than to just truncate?
-    raise ActionController::BadRequest.new("query matches too many records") if count > arbitrary_maximum
-
-    # but since there's a race here, we do truncate the query if we have to
-    results = Project.visible.updated_within(start, stop).limit(arbitrary_maximum).pluck(:platform, :name, :updated_at)
-    deleted_results = DeletedProject.updated_within(start, stop).limit(arbitrary_maximum).pluck(:digest, :updated_at)
+    raise ActionController::BadRequest.new("query matches too many records") if results.length > arbitrary_maximum || deleted_results.length > arbitrary_maximum
 
     results_as_hashes = results.map do |platform, name, updated_at|
       {
