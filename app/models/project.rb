@@ -258,12 +258,13 @@ class Project < ApplicationRecord
   end
 
   def create_deleted_project
-    DeletedProject.create(platform: platform, name: name)
+    DeletedProject.create_from_platform_and_name!(platform, name)
   end
 
   def destroy_deleted_project
     # this happens when bringing a project back to life
-    DeletedProject.where(platform: platform, name: name).destroy_all
+    digest = DeletedProject.digest_from_platform_and_name(platform, name)
+    DeletedProject.where(digest: digest).destroy_all
   end
 
   def stars

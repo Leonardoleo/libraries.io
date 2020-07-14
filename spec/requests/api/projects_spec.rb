@@ -118,8 +118,7 @@ describe "Api::ProjectsController" do
     end
 
     it "notices deletions" do
-      deleted_platform = project.platform
-      deleted_name = project.name
+      deleted_digest = DeletedProject.digest_from_platform_and_name(project.platform, project.name)
       project.destroy!
       get "/api/projects/updated?start_time=#{1.year.ago.utc.iso8601}&api_key=#{internal_user.api_key}"
       expect(response).to have_http_status(:success)
@@ -131,8 +130,7 @@ describe "Api::ProjectsController" do
                                    updated_at: dependent_project.updated_at.utc.iso8601(3)
                                  },
                                  {
-                                   platform: deleted_platform,
-                                   name: deleted_name,
+                                   digest: deleted_digest,
                                    updated_at: DeletedProject.first.updated_at.utc.iso8601(3),
                                    deleted: true
                                  }

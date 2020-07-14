@@ -253,14 +253,18 @@ describe Project, type: :model do
 
     it 'should create a DeletedProject when destroyed' do
       expect(DeletedProject.count).to eq(0)
+      digest = DeletedProject.digest_from_platform_and_name(project.platform, project.name)
+      expect(digest).to eq("291b6e1c75c11c5a15fa27a01a46d4031f06be85")
       project.destroy!
       expect(DeletedProject.count).to eq(1)
       dp = DeletedProject.first
-      expect(dp.name).to eq("react")
+      expect(dp.digest).to eq(digest)
     end
 
     it 'should remove a DeletedProject when resurrected' do
       expect(DeletedProject.count).to eq(0)
+      digest = DeletedProject.digest_from_platform_and_name(project.platform, project.name)
+      expect(digest).to eq("291b6e1c75c11c5a15fa27a01a46d4031f06be85")
       project.destroy!
       expect(DeletedProject.count).to eq(1)
       recreated = Project.create(platform: 'NPM', name: 'react')

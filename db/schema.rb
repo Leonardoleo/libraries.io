@@ -48,11 +48,10 @@ ActiveRecord::Schema.define(version: 2020_07_09_221449) do
   end
 
   create_table "deleted_projects", force: :cascade do |t|
-    t.string "name", null: false
-    t.string "platform", null: false
+    t.string "digest", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["name", "platform"], name: "index_deleted_projects_on_name_and_platform", unique: true
+    t.index ["digest"], name: "index_deleted_projects_on_digest", unique: true
     t.index ["updated_at"], name: "index_deleted_projects_on_updated_at"
   end
 
